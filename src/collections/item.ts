@@ -1,16 +1,16 @@
 import { model, Schema, Document, Model, Types } from "mongoose";
-import { Category, CategorySchema, ICategory } from "./category";
+import { Category } from "./category";
 
 interface IItem extends Document {
   name: string;
-  category: ICategory;
+  categoryId: string;
   price: number;
   URLPath: string;
 }
 
 const ItemSchema = new Schema<IItem>({
   name: { type: String, required: true },
-  category: { type: String, required: true },
+  categoryId: { type: String, required: true },
   price: { type: Number, required: true },
   URLPath: { type: String, required: true },
 });
@@ -23,8 +23,8 @@ ItemSchema.path("name").validate(async (name: string) => {
   return !isItemExist;
 }, "Duplicate item already exists.");
 
-ItemSchema.path("category").validate(async (itemCategory: ICategory) => {
-  const category = await Category.findOne({ name: itemCategory.name }).exec();
+ItemSchema.path("category").validate(async (categoryId: string) => {
+  const category = await Category.findOne({ _id: categoryId }).exec();
 
   const isCategoryValid = !!category;
 

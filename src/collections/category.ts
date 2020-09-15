@@ -22,4 +22,7 @@ CategorySchema.statics.addCategory = async (name: string): Promise<string> => {
   return categoryId;
 };
 
-export const Category = model<ICategory>("Category", CategorySchema);
+export const Category = model<ICategory, ICategoryModel>(
+  "Category",
+  CategorySchema
+);
