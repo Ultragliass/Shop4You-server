@@ -10,7 +10,7 @@ interface IItem extends Document {
 
 const ItemSchema = new Schema<IItem>({
   name: { type: String, required: true },
-  category: { type: CategorySchema, required: true },
+  category: { type: String, required: true },
   price: { type: Number, required: true },
   URLPath: { type: String, required: true },
 });
@@ -23,8 +23,8 @@ ItemSchema.path("name").validate(async (name: string) => {
   return !isItemExist;
 }, "Duplicate item already exists.");
 
-ItemSchema.path("category").validate(async (itemCategory: string) => {
-  const category = await Category.findOne({ name: itemCategory }).exec();
+ItemSchema.path("category").validate(async (itemCategory: ICategory) => {
+  const category = await Category.findOne({ name: itemCategory.name }).exec();
 
   const isCategoryValid = !!category;
 
@@ -43,7 +43,7 @@ ItemSchema.path("URLPath").validate((url: string) => {
 
 export interface IItemModel extends Model<IItem> {
   addItem(item: IItem): Promise<string>;
-  removeItem(_id: string): Promise<string>;
+  removeItem(id: string): Promise<boolean>;
 }
 
 ItemSchema.statics.addItem = async (newItem: IItem): Promise<string> => {
@@ -54,6 +54,18 @@ ItemSchema.statics.addItem = async (newItem: IItem): Promise<string> => {
   const { _id: itemId } = await item.save();
 
   return itemId;
+};
+
+ItemSchema.statics.removeItem = async (id: string): Promise<boolean> => {
+  const item = await Item.findOne({ _id: id }).exec();
+
+  if (!item) {
+    return false;
+  }
+
+  await Item.deleteOne({ _id: id }).exec();
+
+  return true;
 };
 
 export const Item = model<IItem, IItemModel>("Item", ItemSchema);
