@@ -14,7 +14,7 @@ export interface ICart extends Document {
   removeCartItem(cartItemId: string): Promise<boolean>;
 }
 
-const CartSchema = new Schema<ICart>({
+export const CartSchema = new Schema<ICart>({
   userId: { type: String, required: true },
   creationDate: Date,
   cartItems: [CartItemSchema],
@@ -24,7 +24,7 @@ CartSchema.path("userId").validate(async (userId: string) => {
   const user = await User.findOne({ _id: userId }).exec();
 
   return !!user;
-}, "User ID invalid.");
+}, "User does not exist.");
 
 export interface ICartModel extends Model<ICart> {
   createCart(userId: string): Promise<string>;
@@ -66,11 +66,11 @@ CartSchema.methods.addCartItem = async function (
 
   this.cartItems.push(cartItem);
 
-  const { _id: cartItemId } = await this.save({
+  await this.save({
     validateModifiedOnly: true,
   });
 
-  return cartItemId;
+  return this.cartItems[this.cartItems.length - 1]._id;
 };
 
 CartSchema.methods.removeCartItem = async function (

@@ -23,13 +23,11 @@ ItemSchema.path("name").validate(async (name: string) => {
   return !isItemExist;
 }, "Duplicate item already exists.");
 
-ItemSchema.path("category").validate(async (categoryId: string) => {
+ItemSchema.path("categoryId").validate(async (categoryId: string) => {
   const category = await Category.findOne({ _id: categoryId }).exec();
 
-  const isCategoryValid = !!category;
-
-  return isCategoryValid;
-}, "Invalid category.");
+  return !!category;
+}, "Category does not exist.");
 
 ItemSchema.path("price").validate((price: number) => {
   return price > 0;
@@ -39,7 +37,7 @@ ItemSchema.path("URLPath").validate((url: string) => {
   const urlRegex = /(http(s?):)([/|.|\w|\s|-])*\.(?:jpg|png|JPG|jpeg|JPEG)/;
 
   return urlRegex.test(url);
-}, "Invalid URL or format.");
+}, "Invalid URL or image format.");
 
 export interface IItemModel extends Model<IItem> {
   addItem(item: IItem): Promise<string>;
