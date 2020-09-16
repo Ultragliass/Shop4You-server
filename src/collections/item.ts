@@ -1,14 +1,14 @@
-import { model, Schema, Document, Model, Types } from "mongoose";
+import { model, Schema, Document, Model } from "mongoose";
 import { Category } from "./category";
 
-interface IItem extends Document {
+export interface IItem extends Document {
   name: string;
   categoryId: string;
   price: number;
   URLPath: string;
 }
 
-const ItemSchema = new Schema<IItem>({
+export const ItemSchema = new Schema<IItem>({
   name: { type: String, required: true },
   categoryId: { type: String, required: true },
   price: { type: Number, required: true },

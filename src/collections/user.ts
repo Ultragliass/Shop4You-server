@@ -1,4 +1,4 @@
-import { model, Schema, Document, Model, Types } from "mongoose";
+import { model, Schema, Document, Model } from "mongoose";
 import { hash, compare } from "bcrypt";
 
 interface IUser extends Document {
@@ -20,7 +20,7 @@ const UserSchema = new Schema<IUser>({
   id: { type: String, required: true },
   city: { type: String, required: true },
   street: { type: String, required: true },
-  role: { type: String, required: true },
+  role: { type: String, default: "user" },
 });
 
 UserSchema.path("email").validate((email: string) => {
