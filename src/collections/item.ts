@@ -16,12 +16,8 @@ export const ItemSchema = new Schema<IItem>({
 });
 
 ItemSchema.path("name").validate(async (name: string) => {
-  const item = await Item.findOne({ name }).exec();
-
-  const isItemExist = !!item;
-
-  return !isItemExist;
-}, "Duplicate item already exists.");
+  return name.trim();
+}, "Name is required.");
 
 ItemSchema.path("categoryId").validate(async (categoryId: string) => {
   const category = await Category.findById(categoryId).exec();
@@ -40,11 +36,18 @@ ItemSchema.path("URLPath").validate((url: string) => {
 }, "Invalid URL or image format.");
 
 export interface IItemModel extends Model<IItem> {
-  addItem(item: IItem): Promise<string>;
+  addItem(newItem: IItem): Promise<string>;
+  updateItem(updatedItem: IItem, itemId: string): Promise<void>;
   removeItem(itemId: string): Promise<boolean>;
 }
 
 ItemSchema.statics.addItem = async (newItem: IItem): Promise<string> => {
+  const isItemExist = await Item.findOne({ name: newItem.name }).exec();
+
+  if (isItemExist) {
+    throw new Error("Item already exists.");
+  }
+
   const item = new Item({
     ...newItem,
   });
@@ -54,16 +57,23 @@ ItemSchema.statics.addItem = async (newItem: IItem): Promise<string> => {
   return itemId;
 };
 
-ItemSchema.statics.removeItem = async (itemId: string): Promise<boolean> => {
-  const item = await Item.findById(itemId).exec();
+ItemSchema.statics.updateItem = async (
+  updatedItem: IItem,
+  itemId: string
+): Promise<void> => {
+  await Item.updateOne(
+    { _id: itemId },
+    { $set: { ...updatedItem } },
+    { runValidators: true }
+  );
+};
 
-  if (!item) {
-    return false;
+ItemSchema.statics.removeItem = async (itemId: string): Promise<void> => {
+  try {
+    await Item.findByIdAndDelete(itemId).exec();
+  } catch {
+    throw new Error("Invalid item ID.");
   }
-
-  await Item.findByIdAndDelete(itemId).exec();
-
-  return true;
 };
 
 export const Item = model<IItem, IItemModel>("Item", ItemSchema);

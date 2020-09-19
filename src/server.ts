@@ -3,6 +3,7 @@ import cors from "cors";
 import expressJwt from "express-jwt";
 import { connectDatabase } from "./database/database";
 import { userRouter } from "./routers/user";
+import { storeRouter } from "./routers/store";
 
 const PORT = 4201;
 
@@ -21,6 +22,8 @@ app.use(
 );
 
 app.use("/user", userRouter);
+
+app.use("/store", storeRouter);
 
 startServer();
 

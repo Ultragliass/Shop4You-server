@@ -13,11 +13,13 @@ userRouter.post("/register", async (req, res) => {
   try {
     const userId = await User.register(userData);
 
-    const token = jwt.sign({ userId }, JWT_SECRET);
+    const token = jwt.sign({ userId, role: "user" }, JWT_SECRET);
 
-    res.send({ success: true, token });
+    res.send({ success: true, token, role: "user" });
   } catch (error) {
-    res.status(403).send({ success: false, error: error.message });
+    res
+      .status(403)
+      .send({ success: false, error: error.message});
   }
 });
 
@@ -27,9 +29,18 @@ userRouter.post("/login", async (req, res) => {
   try {
     const user = await User.login(email, password);
 
-    const token = jwt.sign({ userId: user._id }, JWT_SECRET);
+    const userData = {
+      role: user.role,
+      name: user.name,
+      lastname: user.lastname,
+      id: user.id,
+      city: user.city,
+      street: user.street,
+    };
 
-    res.send({ success: true, token });
+    const token = jwt.sign({ userId: user._id, role: user.role }, JWT_SECRET);
+
+    res.send({ success: true, token, userData });
   } catch (error) {
     res.status(403).send({ success: false, error: error.message });
   }

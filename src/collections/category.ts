@@ -9,7 +9,7 @@ export const CategorySchema = new Schema<ICategory>({
 });
 
 CategorySchema.path("name").validate(async (name: string) => {
-  const category = Category.findOne({ name }).exec();
+  const category = await Category.findOne({ name }).exec();
 
   const isCategoryExist = !!category;
 
