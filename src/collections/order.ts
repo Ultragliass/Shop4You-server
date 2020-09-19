@@ -1,6 +1,6 @@
 import { model, Schema, Document, Model } from "mongoose";
-import { Item } from "./item";
 import { Cart } from "./cart";
+import { User } from "./user";
 
 export interface IOrder extends Document {
   userId: string;
@@ -21,11 +21,11 @@ export const OrderSchema = new Schema<IOrder>({
   deliveryCity: { type: String, required: true },
   deliveryStreet: { type: String, required: true },
   deliveryDate: { type: Date, required: true },
-  lastCreditDigits: String,
+  lastCreditDigits: { type: String, required: true },
 });
 
 OrderSchema.path("userId").validate(async (userId: string) => {
-  const user = await Item.findById(userId).exec();
+  const user = await User.findById(userId).exec();
 
   return !!user;
 }, "User does not exist.");
@@ -36,14 +36,22 @@ OrderSchema.path("cartId").validate(async (cartId: string) => {
 }, "Cart does not exist.");
 
 export interface IOrderModel extends Model<IOrder> {
-  createOrder(orderDetails: Omit<IOrder, "orderDate">): Promise<IOrder>;
+  createOrder(
+    orderDetails: Omit<IOrder, "orderDate" | "userId" | "finalPrice">,
+    userId: string,
+    finalPrice: number
+  ): Promise<IOrder>;
 }
 
 OrderSchema.statics.createOrder = async (
-  orderDetails: Omit<IOrder, "orderDate">
+  orderDetails: Omit<IOrder, "orderDate" | "userId" | "finalPrice">,
+  userId: string,
+  finalPrice: number
 ): Promise<IOrder> => {
   const order = new Order({
     ...orderDetails,
+    userId,
+    finalPrice,
     orderDate: new Date(),
   });
 

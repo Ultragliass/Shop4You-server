@@ -5,6 +5,7 @@ import { connectDatabase } from "./database/database";
 import { userRouter } from "./routers/user";
 import { storeRouter } from "./routers/store";
 import { cartRouter } from "./routers/cart";
+import { orderRouter } from "./routers/order";
 
 const PORT = 4201;
 
@@ -27,6 +28,8 @@ app.use("/user", userRouter);
 app.use("/store", storeRouter);
 
 app.use("/cart", cartRouter);
+
+app.use("/order", orderRouter);
 
 startServer();
 
