@@ -24,7 +24,7 @@ ItemSchema.path("name").validate(async (name: string) => {
 }, "Duplicate item already exists.");
 
 ItemSchema.path("categoryId").validate(async (categoryId: string) => {
-  const category = await Category.findOne({ _id: categoryId }).exec();
+  const category = await Category.findById(categoryId).exec();
 
   return !!category;
 }, "Category does not exist.");
@@ -41,7 +41,7 @@ ItemSchema.path("URLPath").validate((url: string) => {
 
 export interface IItemModel extends Model<IItem> {
   addItem(item: IItem): Promise<string>;
-  removeItem(id: string): Promise<boolean>;
+  removeItem(itemId: string): Promise<boolean>;
 }
 
 ItemSchema.statics.addItem = async (newItem: IItem): Promise<string> => {
@@ -54,14 +54,14 @@ ItemSchema.statics.addItem = async (newItem: IItem): Promise<string> => {
   return itemId;
 };
 
-ItemSchema.statics.removeItem = async (id: string): Promise<boolean> => {
-  const item = await Item.findOne({ _id: id }).exec();
+ItemSchema.statics.removeItem = async (itemId: string): Promise<boolean> => {
+  const item = await Item.findById(itemId).exec();
 
   if (!item) {
     return false;
   }
 
-  await Item.deleteOne({ _id: id }).exec();
+  await Item.findByIdAndDelete(itemId).exec();
 
   return true;
 };

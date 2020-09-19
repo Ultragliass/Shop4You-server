@@ -29,12 +29,6 @@ UserSchema.path("email").validate((email: string) => {
   return emailRegex.test(email);
 }, "Invalid email.");
 
-UserSchema.path("password").validate((password: string) => {
-  const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[a-zA-Z\d]{8,30}$/;
-
-  return passwordRegex.test(password);
-}, "Invalid password.");
-
 UserSchema.path("id").validate((id: string) => {
   const idRegex = /^[0-9]{8,9}$/;
 
@@ -72,7 +66,13 @@ UserSchema.statics.register = async ({
   const isExist = await User.findOne({ email: userData.email }).exec();
 
   if (isExist) {
-    throw new Error("User already exists");
+    throw new Error("User already exists.");
+  }
+
+  const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[a-zA-Z\d]{8,30}$/;
+
+  if (!passwordRegex.test(password)) {
+    throw new Error("Invalid password.");
   }
 
   const hashedPassword = await hash(password, 10);
@@ -80,6 +80,7 @@ UserSchema.statics.register = async ({
   const user = new User({
     ...userData,
     password: hashedPassword,
+    role: "user",
   });
 
   const { _id: userId } = await user.save();

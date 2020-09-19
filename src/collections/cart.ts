@@ -21,7 +21,7 @@ export const CartSchema = new Schema<ICart>({
 });
 
 CartSchema.path("userId").validate(async (userId: string) => {
-  const user = await User.findOne({ _id: userId }).exec();
+  const user = await User.findById(userId).exec();
 
   return !!user;
 }, "User does not exist.");
@@ -43,13 +43,13 @@ CartSchema.statics.createCart = async (userId: string): Promise<string> => {
 };
 
 CartSchema.statics.deleteCart = async (cartId: string): Promise<boolean> => {
-  const cart = await Cart.findOne({ _id: cartId }).exec();
+  const cart = await Cart.findById(cartId).exec();
 
   if (!cart) {
     return false;
   }
 
-  await Cart.deleteOne({ _id: cartId }).exec();
+  await Cart.findByIdAndDelete(cartId).exec();
 
   return true;
 };

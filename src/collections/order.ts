@@ -25,12 +25,12 @@ export const OrderSchema = new Schema<IOrder>({
 });
 
 OrderSchema.path("userId").validate(async (userId: string) => {
-  const user = await Item.findOne({ _id: userId }).exec();
+  const user = await Item.findById(userId).exec();
 
   return !!user;
 }, "User does not exist.");
 OrderSchema.path("cartId").validate(async (cartId: string) => {
-  const cart = await Cart.findOne({ _id: cartId }).exec();
+  const cart = await Cart.findById(cartId).exec();
 
   return !!cart;
 }, "Cart does not exist.");

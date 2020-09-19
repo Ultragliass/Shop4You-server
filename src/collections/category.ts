@@ -8,6 +8,14 @@ export const CategorySchema = new Schema<ICategory>({
   name: { type: String, required: true },
 });
 
+CategorySchema.path("name").validate(async (name: string) => {
+  const category = Category.findOne({ name }).exec();
+
+  const isCategoryExist = !!category;
+
+  return !isCategoryExist;
+}, "Category already exists.");
+
 export interface ICategoryModel extends Model<ICategory> {
   addCategory(category: ICategory): Promise<string>;
 }

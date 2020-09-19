@@ -14,7 +14,7 @@ export const CartItemSchema = new Schema<ICartItem>({
 });
 
 CartItemSchema.path("itemId").validate(async (itemId: string) => {
-  const item = await Item.findOne({ _id: itemId }).exec();
+  const item = await Item.findById(itemId).exec();
 
   return !!item;
 }, "Item does not exist.");
