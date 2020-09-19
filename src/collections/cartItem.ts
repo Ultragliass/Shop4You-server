@@ -14,9 +14,21 @@ export const CartItemSchema = new Schema<ICartItem>({
 });
 
 CartItemSchema.path("itemId").validate(async (itemId: string) => {
-  const item = await Item.findById(itemId).exec();
+  try {
+    const item = await Item.findById(itemId).exec();
 
-  return !!item;
+    if (!item) {
+      return false;
+    }
+
+    return true;
+  } catch {
+    return false;
+  }
 }, "Item does not exist.");
+
+CartItemSchema.path("amount").validate((amount: number) => {
+  return amount > 0
+}, "Amount cannot be less than 1.");
 
 export const CartItem = model<ICartItem>("CartItem", CartItemSchema);

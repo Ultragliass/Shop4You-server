@@ -4,6 +4,7 @@ import expressJwt from "express-jwt";
 import { connectDatabase } from "./database/database";
 import { userRouter } from "./routers/user";
 import { storeRouter } from "./routers/store";
+import { cartRouter } from "./routers/cart";
 
 const PORT = 4201;
 
@@ -24,6 +25,8 @@ app.use(
 app.use("/user", userRouter);
 
 app.use("/store", storeRouter);
+
+app.use("/cart", cartRouter);
 
 startServer();
 

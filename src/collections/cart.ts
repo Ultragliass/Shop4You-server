@@ -1,17 +1,14 @@
 import { model, Schema, Document, Model, Types } from "mongoose";
 import { User } from "./user";
 import { CartItem, CartItemSchema, ICartItem } from "./cartItem";
-import { IItem } from "./item";
+import { Item } from "./item";
 
 export interface ICart extends Document {
   userId: string;
   creationDate: Date;
   cartItems: ICartItem[];
-  addCartItem(
-    item: Pick<IItem, "_id" | "price">,
-    amount: number
-  ): Promise<string>;
-  removeCartItem(cartItemId: string): Promise<boolean>;
+  addCartItem(itemId: string, amount: number): Promise<string>;
+  removeCartItem(cartItemId: string): Promise<void>;
 }
 
 export const CartSchema = new Schema<ICart>({
@@ -21,19 +18,28 @@ export const CartSchema = new Schema<ICart>({
 });
 
 CartSchema.path("userId").validate(async (userId: string) => {
-  const user = await User.findById(userId).exec();
+  try {
+    const user = await User.findById(userId).exec();
 
-  return !!user;
+    if (!user) {
+      return false;
+    }
+
+    return true;
+  } catch {
+    return false;
+  }
 }, "User does not exist.");
 
 export interface ICartModel extends Model<ICart> {
   createCart(userId: string): Promise<string>;
-  deleteCart(cartId: string): Promise<boolean>;
+  deleteCart(cartId: string): Promise<void>;
 }
 
 CartSchema.statics.createCart = async (userId: string): Promise<string> => {
   const cart = new Cart({
     userId,
+    cartItems: [],
     creationDate: new Date(),
   });
 
@@ -42,53 +48,77 @@ CartSchema.statics.createCart = async (userId: string): Promise<string> => {
   return cartId;
 };
 
-CartSchema.statics.deleteCart = async (cartId: string): Promise<boolean> => {
-  const cart = await Cart.findById(cartId).exec();
+CartSchema.statics.deleteCart = async (cartId: string): Promise<void> => {
+  try {
+    const isExist = await Cart.findByIdAndDelete(cartId).exec();
 
-  if (!cart) {
-    return false;
+    if (!isExist) {
+      throw new Error("Cart does not exist.");
+    }
+  } catch {
+    throw new Error("Invalid cart ID.");
   }
-
-  await Cart.findByIdAndDelete(cartId).exec();
-
-  return true;
 };
 
 CartSchema.methods.addCartItem = async function (
-  { _id: itemId, price },
+  itemId,
   amount
 ): Promise<string> {
-  const cartItem = new CartItem({
-    itemId,
-    amount,
-    totalPrice: amount * price,
-  });
+  try {
+    const item = await Item.findById(itemId).exec();
 
-  this.cartItems.push(cartItem);
+    if (!item) {
+      throw new Error("Item does not exist.");
+    }
 
-  await this.save({
-    validateModifiedOnly: true,
-  });
+    const index = this.cartItems.findIndex((cartItem) =>
+      Types.ObjectId(itemId).equals(cartItem.itemId)
+    );
 
-  return this.cartItems[this.cartItems.length - 1]._id;
+    if (index > -1) {
+      throw new Error("Item already in the cart.");
+    }
+
+    const cartItem = new CartItem({
+      itemId,
+      amount,
+      totalPrice: amount * item.price,
+    });
+
+    this.cartItems.push(cartItem);
+
+    await this.save({
+      validateModifiedOnly: true,
+    });
+
+    return this.cartItems[this.cartItems.length - 1]._id;
+  } catch (error) {
+    if (error.message.includes("_id")) {
+      throw new Error("Item ID invalid.");
+    }
+
+    throw new Error(error);
+  }
 };
 
 CartSchema.methods.removeCartItem = async function (
   cartItemId: string
-): Promise<boolean> {
-  const index = this.cartItems.findIndex((cartItem) =>
-    Types.ObjectId(cartItemId).equals(cartItem._id)
-  );
+): Promise<void> {
+  try {
+    const index = this.cartItems.findIndex((cartItem) =>
+      Types.ObjectId(cartItemId).equals(cartItem._id)
+    );
 
-  if (index < 0) {
-    return false;
+    if (index < 0) {
+      throw new Error("Item does not exist in cart.");
+    }
+
+    this.cartItems.splice(index, 1);
+
+    await this.save({ validateModifiedOnly: true });
+  } catch (error) {
+    throw new Error(error);
   }
-
-  this.cartItems.splice(index, 1);
-
-  await this.save({ validateModifiedOnly: true });
-
-  return true;
 };
 
 export const Cart = model<ICart, ICartModel>("Cart", CartSchema);

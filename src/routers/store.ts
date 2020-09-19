@@ -21,7 +21,7 @@ storeRouter.post("/item", validateAdmin(), async (req, res) => {
 
     res.send({ success: true, itemId });
   } catch (error) {
-    res.status(401).send({ success: false, error: error.message });
+    res.status(400).send({ success: false, error: error.message });
   }
 });
 
@@ -35,7 +35,7 @@ storeRouter.put("/item/:itemId", validateAdmin(), async (req, res) => {
 
     res.send({ success: true, msg: "Item updated." });
   } catch (error) {
-    res.status(401).send({ success: false, error: error.message });
+    res.status(400).send({ success: false, error: error.message });
   }
 });
 
@@ -43,11 +43,11 @@ storeRouter.delete("/item/:itemId", validateAdmin(), async (req, res) => {
   const { itemId } = req.params;
 
   try {
-    await Item.removeItem(itemId);
+    await Item.deleteItem(itemId);
 
     res.send({ success: true, msg: "Item removed." });
   } catch (error) {
-    res.status(401).send({ success: false, error: error.message });
+    res.status(404).send({ success: false, error: error.message });
   }
 });
 
@@ -59,7 +59,7 @@ storeRouter.post("/category", validateAdmin(), async (req, res) => {
 
     res.send({ success: true, categoryId });
   } catch (error) {
-    res.status(401).send({ success: false, error: error.message });
+    res.status(400).send({ success: false, error: error.message });
   }
 });
 

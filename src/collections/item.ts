@@ -20,9 +20,16 @@ ItemSchema.path("name").validate(async (name: string) => {
 }, "Name is required.");
 
 ItemSchema.path("categoryId").validate(async (categoryId: string) => {
-  const category = await Category.findById(categoryId).exec();
+  try {
+    const category = await Category.findById(categoryId).exec();
 
-  return !!category;
+    if (!category) {
+      return false;
+    }
+    return true;
+  } catch {
+    return false;
+  }
 }, "Category does not exist.");
 
 ItemSchema.path("price").validate((price: number) => {
@@ -38,7 +45,7 @@ ItemSchema.path("URLPath").validate((url: string) => {
 export interface IItemModel extends Model<IItem> {
   addItem(newItem: IItem): Promise<string>;
   updateItem(updatedItem: IItem, itemId: string): Promise<void>;
-  removeItem(itemId: string): Promise<boolean>;
+  deleteItem(itemId: string): Promise<boolean>;
 }
 
 ItemSchema.statics.addItem = async (newItem: IItem): Promise<string> => {
@@ -61,16 +68,28 @@ ItemSchema.statics.updateItem = async (
   updatedItem: IItem,
   itemId: string
 ): Promise<void> => {
-  await Item.updateOne(
-    { _id: itemId },
-    { $set: { ...updatedItem } },
-    { runValidators: true }
-  );
+  try {
+    const { n } = await Item.updateOne(
+      { _id: itemId },
+      { $set: { ...updatedItem } },
+      { runValidators: true }
+    );
+
+    if (!n) {
+      throw new Error("Item does not exist.");
+    }
+  } catch {
+    throw new Error("Invalid item ID.");
+  }
 };
 
-ItemSchema.statics.removeItem = async (itemId: string): Promise<void> => {
+ItemSchema.statics.deleteItem = async (itemId: string): Promise<void> => {
   try {
-    await Item.findByIdAndDelete(itemId).exec();
+    const isExist = await Item.findByIdAndDelete(itemId).exec();
+
+    if (!isExist) {
+      throw new Error("Item does not exist.");
+    }
   } catch {
     throw new Error("Invalid item ID.");
   }

@@ -17,9 +17,7 @@ userRouter.post("/register", async (req, res) => {
 
     res.send({ success: true, token, role: "user" });
   } catch (error) {
-    res
-      .status(403)
-      .send({ success: false, error: error.message});
+    res.status(400).send({ success: false, error: error.message });
   }
 });
 
@@ -42,7 +40,7 @@ userRouter.post("/login", async (req, res) => {
 
     res.send({ success: true, token, userData });
   } catch (error) {
-    res.status(403).send({ success: false, error: error.message });
+    res.status(401).send({ success: false, error: error.message });
   }
 });
 
@@ -52,7 +50,7 @@ userRouter.get("/authenticate", async (req: JWTRequest, res) => {
   const user = await User.findById(userId).exec();
 
   if (!user) {
-    return res.status(401).end();
+    return res.status(401).send({ success: false, error: "Invalid token." });
   }
 
   res.send({ success: true, user });
