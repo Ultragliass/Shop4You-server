@@ -7,7 +7,7 @@ const orderRouter = Router();
 orderRouter.get("/:orderId", async (req: JWTRequest, res) => {
   const { orderId } = req.params;
 
-  const { userId } = req.user;
+  const { userId, role } = req.user;
   try {
     const order = await Order.findById(orderId).exec();
 
@@ -17,13 +17,15 @@ orderRouter.get("/:orderId", async (req: JWTRequest, res) => {
         .send({ success: false, error: "Order does not exist." });
     }
 
-    if (order.userId !== userId) {
+    if (order.userId !== userId && role !== "admin") {
       return res
         .status(403)
         .send({ success: false, error: "This order is not yours." });
     }
 
-    res.send({ success: true, order });
+    const cart = await Cart.findById(order.cartId).exec();
+
+    res.send({ success: true, order, cart: cart!.cartItems });
   } catch (error) {
     res.status(400).send({ success: false, error: error.message });
   }
