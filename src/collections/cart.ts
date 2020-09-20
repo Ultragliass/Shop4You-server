@@ -8,6 +8,7 @@ export interface ICart extends Document {
   creationDate: Date;
   cartItems: ICartItem[];
   addCartItem(itemId: string, amount: number): Promise<string>;
+  changeCartItemAmount(cartItemId: string, newAmount: number): Promise<void>;
   removeCartItem(cartItemId: string): Promise<void>;
 }
 
@@ -49,14 +50,10 @@ CartSchema.statics.createCart = async (userId: string): Promise<string> => {
 };
 
 CartSchema.statics.deleteCart = async (cartId: string): Promise<void> => {
-  try {
-    const isExist = await Cart.findByIdAndDelete(cartId).exec();
+  const isExist = await Cart.findByIdAndDelete(cartId).exec();
 
-    if (!isExist) {
-      throw new Error("Cart does not exist.");
-    }
-  } catch {
-    throw new Error("Invalid cart ID.");
+  if (!isExist) {
+    throw new Error("Cart does not exist.");
   }
 };
 
@@ -64,61 +61,78 @@ CartSchema.methods.addCartItem = async function (
   itemId,
   amount
 ): Promise<string> {
-  try {
-    const item = await Item.findById(itemId).exec();
+  const item = await Item.findById(itemId).exec();
 
-    if (!item) {
-      throw new Error("Item does not exist.");
-    }
-
-    const index = this.cartItems.findIndex((cartItem) =>
-      Types.ObjectId(itemId).equals(cartItem.itemId)
-    );
-
-    if (index > -1) {
-      throw new Error("Item already in the cart.");
-    }
-
-    const cartItem = new CartItem({
-      itemId,
-      amount,
-      totalPrice: amount * item.price,
-    });
-
-    this.cartItems.push(cartItem);
-
-    await this.save({
-      validateModifiedOnly: true,
-    });
-
-    return this.cartItems[this.cartItems.length - 1]._id;
-  } catch (error) {
-    if (error.message.includes("_id")) {
-      throw new Error("Item ID invalid.");
-    }
-
-    throw new Error(error);
+  if (!item) {
+    throw new Error("Item does not exist.");
   }
+
+  const index = this.cartItems.findIndex((cartItem) =>
+    Types.ObjectId(itemId).equals(cartItem.itemId)
+  );
+
+  if (index > -1) {
+    throw new Error("Item already in the cart.");
+  }
+
+  const cartItem = new CartItem({
+    itemId,
+    amount,
+    totalPrice: amount * item.price,
+  });
+
+  this.cartItems.push(cartItem);
+
+  await this.save({
+    validateModifiedOnly: true,
+  });
+
+  return this.cartItems[this.cartItems.length - 1]._id;
+};
+
+CartSchema.methods.changeCartItemAmount = async function (
+  cartItemId: string,
+  newAmount: number
+) {
+  const index = this.cartItems.findIndex((cartItem) =>
+    Types.ObjectId(cartItemId).equals(cartItem._id)
+  );
+
+  if (index < 0) {
+    throw new Error("Item does not exist in cart.");
+  }
+
+  if (newAmount === this.cartItems[index].amount) {
+    throw new Error("Amount is the same.");
+  }
+
+  if (newAmount <= 0) {
+    this.cartItems.splice(index, 1);
+  } else {
+    const item = await Item.findById(this.cartItems[index].itemId).exec();
+
+    this.cartItems[index].amount = newAmount;
+
+    this.cartItems[index].totalPrice = item!.price * newAmount;
+  }
+
+  await this.save({ validateModifiedOnly: true });
 };
 
 CartSchema.methods.removeCartItem = async function (
   cartItemId: string
 ): Promise<void> {
-  try {
-    const index = this.cartItems.findIndex((cartItem) =>
-      Types.ObjectId(cartItemId).equals(cartItem._id)
-    );
+  const index = this.cartItems.findIndex((cartItem) =>
+    Types.ObjectId(cartItemId).equals(cartItem._id)
+  );
 
-    if (index < 0) {
-      throw new Error("Item does not exist in cart.");
-    }
-
-    this.cartItems.splice(index, 1);
-
-    await this.save({ validateModifiedOnly: true });
-  } catch (error) {
-    throw new Error(error);
+  if (index < 0) {
+    throw new Error("Item does not exist in cart.");
   }
+
+  this.cartItems.splice(index, 1);
+
+  await this.save({ validateModifiedOnly: true });
 };
 
 export const Cart = model<ICart, ICartModel>("Cart", CartSchema);

@@ -37,7 +37,7 @@ ItemSchema.path("price").validate((price: number) => {
 }, "Price must be more than 0.");
 
 ItemSchema.path("URLPath").validate((url: string) => {
-  const urlRegex = /(http(s?):)([/|.|\w|\s|-])*\.(?:jpg|png|JPG|jpeg|JPEG)/;
+  const urlRegex = /(http(s?)?:\/\/.*\.(?:png|jpg|jpeg))/i;
 
   return urlRegex.test(url);
 }, "Invalid URL or image format.");
@@ -68,30 +68,22 @@ ItemSchema.statics.updateItem = async (
   updatedItem: IItem,
   itemId: string
 ): Promise<void> => {
-  try {
-    const { n } = await Item.updateOne(
-      { _id: itemId },
-      { $set: { ...updatedItem } },
-      { runValidators: true }
-    );
+  const { n } = await Item.updateOne(
+    { _id: itemId },
+    { $set: { ...updatedItem } },
+    { runValidators: true }
+  );
 
-    if (!n) {
-      throw new Error("Item does not exist.");
-    }
-  } catch {
-    throw new Error("Invalid item ID.");
+  if (!n) {
+    throw new Error("Item does not exist.");
   }
 };
 
 ItemSchema.statics.deleteItem = async (itemId: string): Promise<void> => {
-  try {
-    const isExist = await Item.findByIdAndDelete(itemId).exec();
+  const isExist = await Item.findByIdAndDelete(itemId).exec();
 
-    if (!isExist) {
-      throw new Error("Item does not exist.");
-    }
-  } catch {
-    throw new Error("Invalid item ID.");
+  if (!isExist) {
+    throw new Error("Item does not exist.");
   }
 };
 

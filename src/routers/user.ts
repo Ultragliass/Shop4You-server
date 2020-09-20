@@ -47,13 +47,17 @@ userRouter.post("/login", async (req, res) => {
 userRouter.get("/authenticate", async (req: JWTRequest, res) => {
   const { userId } = req.user;
 
-  const user = await User.findById(userId).exec();
+  try {
+    const user = await User.findById(userId).exec();
 
-  if (!user) {
-    return res.status(401).send({ success: false, error: "Invalid token." });
+    if (!user) {
+      return res.status(401).send({ success: false, error: "Invalid token." });
+    }
+
+    res.send({ success: true, user });
+  } catch {
+    res.status(401).send({ success: false, error: "Invalid token" });
   }
-
-  res.send({ success: true, user });
 });
 
 export { userRouter };
