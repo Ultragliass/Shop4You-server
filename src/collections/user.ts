@@ -63,10 +63,16 @@ UserSchema.statics.register = async ({
   password,
   ...userData
 }: IUser): Promise<string> => {
-  const isExist = await User.findOne({ email: userData.email }).exec();
+  const isEmailExist = await User.findOne({ email: userData.email }).exec();
 
-  if (isExist) {
+  if (isEmailExist) {
     throw new Error("User already exists.");
+  }
+
+  const isIdExist = await User.findOne({ id: userData.id });
+
+  if (isIdExist) {
+    throw new Error("Duplicate ID already exists. Please contact support.");
   }
 
   const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[a-zA-Z\d]{8,30}$/;
