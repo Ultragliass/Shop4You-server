@@ -1,11 +1,11 @@
-# express-ts
-A Minimal Express Typescript boilerplate
+# Shop4You - server
 
-Use this template repository to create a new Node project with Express and Typescript installed
+This will be the server side for the Shop4You project.
 
 ## Instructions
 
-* Type `npm i`
-* Type `npm start`
-* Open your browser and go to http://localhost:4000
-* WIN!
+- Run `npm i`.
+- Alter `database/database.ts` with your database information.
+- Set `JWT_SECRET` environmental variable.
+- Run the script in `setup.js` in your MongoDB shell. (Alter accordingly)
+- Run `npm start`.
