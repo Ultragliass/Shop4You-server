@@ -44,7 +44,7 @@ UserSchema.statics.login = async (
   email: string,
   password: string
 ): Promise<IUser> => {
-  const user = await User.findOne({ email }).exec();
+  const user = await User.findOne({ email: email.toLowerCase() }).exec();
 
   if (!user) {
     throw new Error("Username and password don't match.");
@@ -85,6 +85,7 @@ UserSchema.statics.register = async ({
 
   const user = new User({
     ...userData,
+    email: userData.email.toLowerCase(),
     password: hashedPassword,
     role: "user",
   });
