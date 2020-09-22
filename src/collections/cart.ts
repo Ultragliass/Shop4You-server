@@ -34,7 +34,7 @@ CartSchema.path("userId").validate(async (userId: string) => {
 
 export interface ICartModel extends Model<ICart> {
   createCart(userId: string): Promise<string>;
-  deleteCart(cartId: string): Promise<void>;
+  emptyCart(cartId: string): Promise<void>;
 }
 
 CartSchema.statics.createCart = async (userId: string): Promise<string> => {
@@ -49,10 +49,13 @@ CartSchema.statics.createCart = async (userId: string): Promise<string> => {
   return cartId;
 };
 
-CartSchema.statics.deleteCart = async (cartId: string): Promise<void> => {
-  const isExist = await Cart.findByIdAndDelete(cartId).exec();
+CartSchema.statics.emptyCart = async (cartId: string): Promise<void> => {
+  const cart = await Cart.updateOne(
+    { _id: cartId },
+    { $set: { cartItems: [] } }
+  ).exec();
 
-  if (!isExist) {
+  if (!cart) {
     throw new Error("Cart does not exist.");
   }
 };

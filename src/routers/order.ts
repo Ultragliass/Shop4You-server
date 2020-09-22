@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { Cart, Order } from "../collections";
+import { Cart, Order, User } from "../collections";
 import { JWTRequest } from "../models/JWTRequest";
 
 const orderRouter = Router();
@@ -51,12 +51,18 @@ orderRouter.post("/", async (req: JWTRequest, res) => {
         .send({ success: false, error: "This cart does not belong to you." });
     }
 
+    if (!cart.cartItems.length) {
+      return res.status(400).send({ success: false, error: "Cart is empty." });
+    }
+
     const finalPrice = cart.cartItems.reduce(
       (total, cartItem) => total + cartItem.totalPrice,
       0
     );
 
     const order = await Order.createOrder(orderDetails, userId, finalPrice);
+
+    await User.updateUserCart(userId, null);
 
     res.send({ success: true, order });
   } catch (error) {

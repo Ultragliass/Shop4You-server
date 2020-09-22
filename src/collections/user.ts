@@ -1,5 +1,6 @@
 import { model, Schema, Document, Model } from "mongoose";
 import { hash, compare } from "bcrypt";
+import { Cart } from "./cart";
 
 interface IUser extends Document {
   email: string;
@@ -10,6 +11,7 @@ interface IUser extends Document {
   city: string;
   street: string;
   role: string;
+  currentCartId: string | null;
 }
 
 const UserSchema = new Schema<IUser>({
@@ -21,6 +23,7 @@ const UserSchema = new Schema<IUser>({
   city: { type: String, required: true },
   street: { type: String, required: true },
   role: { type: String, default: "user" },
+  currentCartId: { type: String || null, default: null },
 });
 
 UserSchema.path("email").validate((email: string) => {
@@ -38,6 +41,7 @@ UserSchema.path("id").validate((id: string) => {
 export interface IUserModel extends Model<IUser> {
   login(email: string, password: string): Promise<IUser>;
   register(userdata: IUser): Promise<string>;
+  updateUserCart(userId: string, cartId: string | null): Promise<void>;
 }
 
 UserSchema.statics.login = async (
@@ -93,6 +97,39 @@ UserSchema.statics.register = async ({
   const { _id: userId } = await user.save();
 
   return userId;
+};
+
+UserSchema.statics.updateUserCart = async (
+  userId: string,
+  cartId: string | null
+): Promise<void> => {
+  const user = await User.findById(userId).exec();
+
+  if (!user) {
+    throw new Error("User does not exist.");
+  }
+
+  if (!cartId) {
+    user.currentCartId = null;
+
+    await user.save();
+
+    return;
+  }
+
+  const cart = await Cart.findById(cartId).exec();
+
+  if (!cart) {
+    throw new Error("Cart does not exist.");
+  }
+
+  if (cart.userId !== userId) {
+    throw new Error("Cart does not belong to this user.");
+  }
+
+  user.currentCartId = cart._id;
+
+  await user.save();
 };
 
 export const User = model<IUser, IUserModel>("User", UserSchema);

@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { Cart } from "../collections";
+import { Cart, User } from "../collections";
 import { JWTRequest } from "../models/JWTRequest";
 
 const cartRouter = Router();
@@ -36,13 +36,15 @@ cartRouter.post("/", async (req: JWTRequest, res) => {
   try {
     const cartId = await Cart.createCart(userId);
 
+    await User.updateUserCart(userId, cartId);
+
     res.send({ success: true, cartId });
   } catch {
     res.status(404).send({ success: false, error: "User does not exist." });
   }
 });
 
-cartRouter.delete("/:cartId", async (req: JWTRequest, res) => {
+cartRouter.put("/:cartId", async (req: JWTRequest, res) => {
   const { cartId } = req.params;
 
   const { userId } = req.user;
@@ -62,9 +64,9 @@ cartRouter.delete("/:cartId", async (req: JWTRequest, res) => {
         .send({ success: false, error: "This cart does not belong to you." });
     }
 
-    await Cart.deleteCart(cartId);
+    await Cart.emptyCart(cartId);
 
-    res.send({ success: true, msg: "Cart deleted." });
+    res.send({ success: true, msg: "Cart emptied." });
   } catch (error) {
     res.status(400).send({ success: false, error: error.message });
   }
