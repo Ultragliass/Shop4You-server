@@ -1,6 +1,6 @@
 import { Router } from "express";
 import jwt from "jsonwebtoken";
-import { User } from "../collections";
+import { Cart, Order, User } from "../collections";
 import { JWTRequest } from "../models/JWTRequest";
 
 const { JWT_SECRET = "test" } = process.env;
@@ -27,6 +27,10 @@ userRouter.post("/login", async (req, res) => {
   try {
     const user = await User.login(email, password);
 
+    const cart = await Cart.findById(user.currentCartId).exec();
+
+    const order = await Order.findOne({ userId: user._id }).exec();
+
     const userData = {
       role: user.role,
       name: user.name,
@@ -38,7 +42,13 @@ userRouter.post("/login", async (req, res) => {
 
     const token = jwt.sign({ userId: user._id, role: user.role }, JWT_SECRET);
 
-    res.send({ success: true, token, userData });
+    res.send({
+      success: true,
+      token,
+      userData,
+      currentCartDate: cart?.creationDate,
+      lastOrderDate: order?.orderDate,
+    });
   } catch (error) {
     res.status(401).send({ success: false, error: error.message });
   }

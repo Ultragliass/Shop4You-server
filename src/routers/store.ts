@@ -1,7 +1,6 @@
 import { Router } from "express";
-import { Item, Category } from "../collections";
+import { Item, Category, Order } from "../collections";
 import { validateAdmin } from "../middleware/validateAdmin";
-import { JWTRequest } from "../models/JWTRequest";
 
 const storeRouter = Router();
 
@@ -10,7 +9,9 @@ storeRouter.get("/", async (req, res) => {
 
   const categories = await Category.find().exec();
 
-  res.send({ success: true, categories, items });
+  const orders = await Order.find().exec();
+
+  res.send({ success: true, categories, items, numOfOrders: orders.length });
 });
 
 storeRouter.post("/item", validateAdmin(), async (req, res) => {
