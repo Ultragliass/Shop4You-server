@@ -7,6 +7,36 @@ const { JWT_SECRET = "test" } = process.env;
 
 const userRouter = Router();
 
+userRouter.post("/check", async (req, res) => {
+  const { id, email, password } = req.body;
+
+  const isExist = await User.findOne({ $or: [{ email }, { id }] }).exec();
+
+  if (!/^[0-9]{8,9}$/.test(id)) {
+    return res.status(400).send({ success: false, error: "ID invalid." });
+  }
+
+  if (
+    !/^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/.test(
+      email
+    )
+  ) {
+    return res.status(400).send({ success: false, error: "Email invalid." });
+  }
+
+  if (!/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[a-zA-Z\d]{8,30}$/.test(password)) {
+    return res.status(400).send({ success: false, error: "Passowrd invalid" });
+  }
+
+  if (isExist) {
+    res
+      .status(400)
+      .send({ success: false, error: "Email or ID already exist." });
+  } else {
+    res.send({ success: true });
+  }
+});
+
 userRouter.post("/register", async (req, res) => {
   const userData = req.body;
 
@@ -15,7 +45,9 @@ userRouter.post("/register", async (req, res) => {
 
     const token = jwt.sign({ userId, role: "user" }, JWT_SECRET);
 
-    res.send({ success: true, token, role: "user" });
+    userData.role = "user";
+
+    res.send({ success: true, userData, token });
   } catch (error) {
     res.status(400).send({ success: false, error: error.message });
   }
@@ -64,7 +96,25 @@ userRouter.get("/authenticate", async (req: JWTRequest, res) => {
       return res.status(401).send({ success: false, error: "Invalid token." });
     }
 
-    res.send({ success: true, user });
+    const cart = await Cart.findById(user.currentCartId).exec();
+
+    const order = await Order.findOne({ userId: user._id }).exec();
+
+    const userData = {
+      role: user.role,
+      name: user.name,
+      lastname: user.lastname,
+      id: user.id,
+      city: user.city,
+      street: user.street,
+    };
+
+    res.send({
+      success: true,
+      userData,
+      currentCartDate: cart?.creationDate,
+      lastOrderDate: order?.orderDate,
+    });
   } catch {
     res.status(401).send({ success: false, error: "Invalid token" });
   }

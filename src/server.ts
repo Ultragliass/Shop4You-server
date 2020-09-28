@@ -20,7 +20,7 @@ app.use(cors());
 
 app.use(
   expressJwt({ secret: JWT_SECRET }).unless({
-    path: ["/user/register", "/user/login", "/store"],
+    path: ["/user/register", "/user/login", "/user/check", "/store"],
   })
 );
 
