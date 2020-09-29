@@ -70,6 +70,7 @@ userRouter.post("/login", async (req, res) => {
       id: user.id,
       city: user.city,
       street: user.street,
+      currecntCartId: user.currentCartId,
     };
 
     const token = jwt.sign({ userId: user._id, role: user.role }, JWT_SECRET);
@@ -107,6 +108,7 @@ userRouter.get("/authenticate", async (req: JWTRequest, res) => {
       id: user.id,
       city: user.city,
       street: user.street,
+      currentCartId: user.currentCartId,
     };
 
     res.send({
@@ -118,6 +120,22 @@ userRouter.get("/authenticate", async (req: JWTRequest, res) => {
   } catch {
     res.status(401).send({ success: false, error: "Invalid token" });
   }
+});
+
+userRouter.get("/ping", async (req: JWTRequest, res) => {
+  const { userId } = req.user;
+
+  if (!userId) {
+    return res.status(401).send({ success: false });
+  }
+
+  const user = await User.findById(userId).exec();
+
+  if (!user) {
+    return res.status(404).send({ success: false });
+  }
+
+  res.send({ success: true });
 });
 
 export { userRouter };
