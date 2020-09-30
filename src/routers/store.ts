@@ -28,6 +28,22 @@ storeRouter.get("/:categoryId", async (req, res) => {
   }
 });
 
+storeRouter.get("/search/:term", async (req, res) => {
+  const { term } = req.params;
+
+  const regex = new RegExp(`^(.*?(${term})[^$]*)$`, "i");
+
+  const items = await Item.find().exec();
+
+  const selectedItems = await Item.find({ name: { $regex: regex } }).exec();
+
+  if (!term) {
+    res.send({ success: true, items, selectedItems: items });
+  } else {
+    res.send({ success: true, items, selectedItems });
+  }
+});
+
 storeRouter.post("/item", validateAdmin(), async (req, res) => {
   const newItem = req.body;
 
