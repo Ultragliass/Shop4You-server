@@ -10,7 +10,7 @@ export interface IOrder extends Document {
   deliveryCity: string;
   deliveryStreet: string;
   deliveryDate: Date;
-  lastCreditDigits?: string;
+  lastCreditDigits: string;
 }
 
 export const OrderSchema = new Schema<IOrder>({
@@ -35,6 +35,10 @@ OrderSchema.path("cartId").validate(async (cartId: string) => {
   return !!cart;
 }, "Cart does not exist.");
 
+OrderSchema.path("deliveryDate").validate((deliveryDate: Date) => {
+  return deliveryDate > new Date();
+}, "Date must be later than the current date.");
+
 export interface IOrderModel extends Model<IOrder> {
   createOrder(
     orderDetails: Omit<IOrder, "orderDate" | "userId" | "finalPrice">,
@@ -48,8 +52,17 @@ OrderSchema.statics.createOrder = async (
   userId: string,
   finalPrice: number
 ): Promise<IOrder> => {
+  const regex = /4[0-9]{12}(?:[0-9]{3})?|5[1-5][0-9]{14}|3[47][0-9]{13}|3(?:0[0-5]|[68][0-9])[0-9]{11}|6(?:011|5[0-9]{2})[0-9]{12}|(?:2131|1800|35\d{3})\d{11}/;
+
+  const { lastCreditDigits } = orderDetails;
+
+  if (!regex.test(lastCreditDigits)) {
+    throw new Error("Credit card invalid.");
+  }
+
   const order = new Order({
     ...orderDetails,
+    lastCreditDigits: lastCreditDigits.substr(lastCreditDigits.length - 4),
     userId,
     finalPrice,
     orderDate: new Date(),
