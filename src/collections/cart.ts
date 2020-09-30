@@ -7,7 +7,7 @@ export interface ICart extends Document {
   userId: string;
   creationDate: Date;
   cartItems: ICartItem[];
-  addCartItem(itemId: string, amount: number): Promise<string>;
+  addCartItem(itemId: string, amount: number): Promise<ICartItem>;
   changeCartItemAmount(cartItemId: string, newAmount: number): Promise<void>;
   removeCartItem(cartItemId: string): Promise<void>;
 }
@@ -63,7 +63,7 @@ CartSchema.statics.emptyCart = async (cartId: string): Promise<void> => {
 CartSchema.methods.addCartItem = async function (
   itemId,
   amount
-): Promise<string> {
+): Promise<ICartItem> {
   const item = await Item.findById(itemId).exec();
 
   if (!item) {
@@ -90,7 +90,7 @@ CartSchema.methods.addCartItem = async function (
     validateModifiedOnly: true,
   });
 
-  return this.cartItems[this.cartItems.length - 1]._id;
+  return this.cartItems[this.cartItems.length - 1];
 };
 
 CartSchema.methods.changeCartItemAmount = async function (

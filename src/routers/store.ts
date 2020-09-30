@@ -14,6 +14,20 @@ storeRouter.get("/", async (req, res) => {
   res.send({ success: true, categories, items, numOfOrders: orders.length });
 });
 
+storeRouter.get("/:categoryId", async (req, res) => {
+  const { categoryId } = req.params;
+
+  const items = await Item.find().exec();
+
+  if (categoryId === "all") {
+    res.send({ success: true, selectedItems: items, items });
+  } else {
+    const selectedItems = await Item.find({ categoryId }).exec();
+
+    res.send({ success: true, selectedItems, items });
+  }
+});
+
 storeRouter.post("/item", validateAdmin(), async (req, res) => {
   const newItem = req.body;
 

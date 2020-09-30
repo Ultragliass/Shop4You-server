@@ -24,7 +24,7 @@ cartRouter.get("/:cartId", async (req: JWTRequest, res) => {
         .send({ success: false, error: "This cart does not belong to you!" });
     }
 
-    res.send({ success: true, cart });
+    res.send({ success: true, cartItems: cart.cartItems });
   } catch {
     res.status(400).send({ success: false, error: "Invalid cart ID." });
   }
@@ -44,7 +44,7 @@ cartRouter.post("/", async (req: JWTRequest, res) => {
   }
 });
 
-cartRouter.put("/:cartId", async (req: JWTRequest, res) => {
+cartRouter.put("/clear_cart/:cartId", async (req: JWTRequest, res) => {
   const { cartId } = req.params;
 
   const { userId } = req.user;
@@ -92,9 +92,9 @@ cartRouter.post("/add_item", async (req: JWTRequest, res) => {
         .send({ success: false, error: "This cart does not belong to you." });
     }
 
-    const cartItemId = await cart.addCartItem(itemId, amount);
+    const cartItem = await cart.addCartItem(itemId, amount);
 
-    res.send({ success: true, cartItemId });
+    res.send({ success: true, cartItem });
   } catch (error) {
     res.status(400).send({ success: false, error: error.message });
   }
@@ -132,7 +132,7 @@ cartRouter.put("/change_amount", async (req: JWTRequest, res) => {
   }
 });
 
-cartRouter.delete("/remove_item", async (req: JWTRequest, res) => {
+cartRouter.put("/remove_item", async (req: JWTRequest, res) => {
   const { cartItemId, cartId } = req.body;
 
   const { userId } = req.user;
@@ -154,7 +154,7 @@ cartRouter.delete("/remove_item", async (req: JWTRequest, res) => {
 
     await cart.removeCartItem(cartItemId);
 
-    res.send({ success: true, msg: "Cart item removed." });
+    res.send({ success: true, cartItemId });
   } catch (error) {
     res.status(400).send({ success: false, error: error.message });
   }
