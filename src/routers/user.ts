@@ -70,7 +70,7 @@ userRouter.post("/login", async (req, res) => {
       id: user.id,
       city: user.city,
       street: user.street,
-      currecntCartId: user.currentCartId,
+      currentCartId: user.currentCartId,
     };
 
     const token = jwt.sign({ userId: user._id, role: user.role }, JWT_SECRET);
